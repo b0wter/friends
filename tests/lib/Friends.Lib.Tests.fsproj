@@ -11,6 +11,7 @@
     <Compile Include="RelationshipScoreTests.fs" />
     <Compile Include="RelationshipGridTests.fs" />
     <Compile Include="SparseMatrixTests.fs" />
+    <Compile Include="GroupTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

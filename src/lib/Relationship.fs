@@ -1,9 +1,9 @@
 namespace Friends.Lib
 
 module Relationship =
-    type Relationship<'from, 'toward> = {
+
+    type Relationship<'toward> = {
         Score: RelationshipScore.T
-        From: 'from
         Towards: 'toward
     }
     

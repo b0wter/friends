@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="Helpers.fs" />
     <Compile Include="SparseMatrix.fs" />
+    <Compile Include="SignificanceInGroup.fs" />
     <Compile Include="RelationshipScore.fs" />
     <Compile Include="RelationshipRenown.fs" />
     <Compile Include="RelationshipGrid.fs" />
