@@ -9,9 +9,9 @@
     <Compile Include="Helpers.fs" />
     <Compile Include="SignificanceInGroup.fs" />
     <Compile Include="RelationshipRenown.fs" />
+    <Compile Include="RelationshipScore.fs" />
     <Compile Include="Person.fs" />
     <Compile Include="Group.fs" />
-    <Compile Include="RelationshipScore.fs" />
     <Compile Include="Connections.fs" />
     <Compile Include="SocialGraph.fs" />
   </ItemGroup>

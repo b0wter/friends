@@ -24,7 +24,7 @@ module Group =
     /// </remarks>
     [<AbstractClass; Sealed>]
     type Factory private () =
-        static member Create (name, ?description, ?playerRenown, ?id) =
+        static member Create (name, ?description, ?id) =
             {
                 Id = id |> Option.defaultValue (Guid.NewGuid ())
                 Name = name
