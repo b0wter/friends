@@ -28,7 +28,7 @@ module SocialGraphs =
                     (
                         let factor = (renown1 |> RelationshipRenown.asFactor) * (renown2 |> RelationshipRenown.asFactor)
                         RelationshipRenown.decimalMinValue + factor * RelationshipRenown.decimalMaxValue |> RelationshipRenown.createClamped,
-                        RelationshipScore.factor score2 (RelationshipScore.asFactor score1)
+                        RelationshipScore.scale score2 (RelationshipScore.asFactor score1)
                     ) |> Some
                 // From --> To
                 | [ Connections.GraphNode.Person _, Connections.Connection.Values c1 ] ->

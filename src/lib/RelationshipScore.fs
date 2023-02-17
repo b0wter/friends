@@ -58,9 +58,12 @@ module RelationshipScore =
     let asFactor (s: T) : decimal =
         match s with | RelationshipScore score -> (score - decimalMiddleValue) * decimalRangeModifier
 
-    let factor (s: T) (factor: decimal) : T =
+    /// Scales the value of a `RelationshipScore` by the given factor. Makes sure that the resulting value is inside
+    /// the bounds of `decimalMinValue` and `decimalMaxValue`
+    let scale (s: T) (factor: decimal) : T =
         match s with | RelationshipScore score -> createClamped ((score - decimalMiddleValue) * factor)
         
+    /// Merges a list of `RelationshipScores` into a single `RelationshipScore` by averaging their actual decimal values
     let merge (scores: T list) : T =
         scores
         |> List.map (function RelationshipScore s -> s)
