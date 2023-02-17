@@ -94,3 +94,28 @@ module RelationshipScore =
     let ``Checking whether a smaller score is smaller using the < operator returns true`` () =
         let result = (RelationshipScore.createClamped 0.25m) < (RelationshipScore.createClamped 0.5m)
         result |> should be True
+
+    [<Theory>]
+    [<InlineData( 00, -100)>]
+    [<InlineData( 10, -90)>]
+    [<InlineData( 20, -80)>]
+    [<InlineData( 25, -75)>]
+    [<InlineData( 50, -50)>]
+    [<InlineData( 60, -40)>]
+    [<InlineData( 70, -30)>]
+    [<InlineData( 75, -25)>]
+    [<InlineData(100,   0)>]
+    [<InlineData(110,  10)>]
+    [<InlineData(120,  20)>]
+    [<InlineData(125,  25)>]
+    [<InlineData(150,  50)>]
+    [<InlineData(160,  60)>]
+    [<InlineData(170,  70)>]
+    [<InlineData(175,  75)>]
+    [<InlineData(200, 100)>]
+    let ``Computing a normalized factor from a relationship score returns correct value`` (i1, i2) =
+        let decimalScore = i1 / 100m
+        let expectedFactor = i2 / 100m
+        let score = RelationshipScore.createClamped decimalScore
+        let asFactor = score |> RelationshipScore.asFactor
+        asFactor |> should equal expectedFactor
