@@ -39,3 +39,4 @@ msbuild.wrn
 appsettings.*.json
 
 .fake
+assets/

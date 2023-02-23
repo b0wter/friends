@@ -37,6 +37,7 @@ public class MyGame : Game
     protected override void Initialize()
     {
         // TODO: Add your initialization logic here
+        _nextScene = new OverworldScene(this);
 
         base.Initialize();
     }
