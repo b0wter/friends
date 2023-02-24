@@ -5,7 +5,9 @@ using System.Linq;
 using Friends.Game.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended;
 using MonoGame.Extended.Entities;
+using MonoGame.Extended.ViewportAdapters;
 using TiledCS;
 
 namespace Friends.Game.Scenes;
@@ -33,6 +35,9 @@ public class OverworldScene : GameplayScene
     private Dictionary<int, TiledTileset> _tilesets;
     private Dictionary<int, Texture2D> _tilesetTextures = new();
     private SpriteBatch _spriteBatch;
+    private Dictionary<int, (int TilesetId, int Offset)> _tilesetTilesId;
+    private RenderTarget2D _renderTarget;
+    private OrthographicCamera _camera;
 
     private const int ScaleFactor = 3;
 
@@ -40,6 +45,9 @@ public class OverworldScene : GameplayScene
     {
         _game.Content.RootDirectory = "Content";
         _game.IsMouseVisible = true;
+        _renderTarget = new RenderTarget2D(game.GraphicsDevice, 5784, 6762);
+        var viewportAdapter = new BoxingViewportAdapter(game.Window, game.GraphicsDevice, 1920, 1080);
+        _camera = new OrthographicCamera(viewportAdapter);
     }
 
     public override void Initialize()
@@ -64,11 +72,18 @@ public class OverworldScene : GameplayScene
 
         var allTilesetTileIds = new HashSet<int>(_tilesets.Count * 64);
         _tiledMap.Layers.SelectMany(t => t.data).ToList().ForEach(x => allTilesetTileIds.Add(x));
+        allTilesetTileIds.Remove(0);
 
-        var dict = new Dictionary<int, (int TilesetId, int Offset)>(allTilesetTileIds.Count);
+        _tilesetTilesId = new Dictionary<int, (int TilesetId, int Offset)>(allTilesetTileIds.Count);
+        var highestTilesetId = tilesetIds.Last();
         foreach (var id in allTilesetTileIds)
         {
-            var index = tilesetIds.FindIndex(i => i > id) - 1;
+            var indexOfFirstLargerId =
+                id >= highestTilesetId
+                    ? tilesetIds.Count
+                    : tilesetIds.FindIndex(i => i > id);
+            var tilesetId = _tiledMap.Tilesets[indexOfFirstLargerId - 1].firstgid; // tilesetIds[indexOfFirstLargerId - 1];
+            _tilesetTilesId.Add(id, (tilesetId, id - tilesetId));
         }
         
         foreach (var tileset in _tiledMap.Tilesets)
@@ -77,54 +92,13 @@ public class OverworldScene : GameplayScene
             _tilesetTextures.Add(tileset.firstgid, _game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", name)));
         }
         
-        /*
-        AddTilesetTexture("animals");
-        AddTilesetTexture("badlands");
-        AddTilesetTexture("bridges");
-        AddTilesetTexture("crystalline");
-        AddTilesetTexture("DeadPlains");
-        AddTilesetTexture("Desert");
-        AddTilesetTexture("FjordSummer");
-        AddTilesetTexture("FjordWinter");
-        AddTilesetTexture("Grassland");
-        AddTilesetTexture("Mangrove");
-        AddTilesetTexture("MuddyPlains");
-        AddTilesetTexture("Mushroom");
-        AddTilesetTexture("Ocean");
-        AddTilesetTexture("Random");
-        AddTilesetTexture("River");
-        AddTilesetTexture("Road");
-        AddTilesetTexture("SmoothMtn");
-        AddTilesetTexture("ThickForest");
-        AddTilesetTexture("Walls");
-        */
-        /*
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "animals")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "badlands")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "bridges")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "crystalline")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "DeadPlains")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "Desert")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "FjordSummer")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "FjordWinter")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "Grassland")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "Mangrove")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "MuddyPlains")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "Mushroom")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "Ocean")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "Random")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "River")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "Road")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "SmoothMtn")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "ThickForest")));
-        _tilesetTextures.Add(_game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", "Walls")));
-        */
-        
         base.LoadContent();
     }
 
     public override void Draw(SpriteBatch spriteBatch)
     {
+        _game.GraphicsDevice.SetRenderTarget(_renderTarget);
+        
         _game.GraphicsDevice.Clear(new Color(24, 24, 24));
         _spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _transformMatrix);
 
@@ -159,7 +133,14 @@ public class OverworldScene : GameplayScene
 
                         // Create destination and source rectangles
                         var source = new Rectangle(rect.x, rect.y, rect.width, rect.height);
-                        var destination = new Rectangle(tileX, tileY, _tiledMap.TileWidth, _tiledMap.TileHeight);
+                        var destination =
+                            new Rectangle
+                                (
+                                    (int)(tileX * 0.75) - 1,
+                                    (x % 2 == 0 ? tileY : tileY + 38) - 11, //_tiledMap.TileHeight / 2) - 11,
+                                    _tiledMap.TileWidth,
+                                    _tiledMap.TileHeight
+                                );
 
 
                         // You can use the helper methods to get information to handle flips and rotations
@@ -201,14 +182,31 @@ public class OverworldScene : GameplayScene
                                 break;
                         }
 
-
                         // Render sprite at position tileX, tileY using the rect
-                        _spriteBatch.Draw(_tilesetTextures[gid], destination, source, Color.White, (float)rotation, Vector2.Zero, effects, 0);                    
+                        var (tilesetId, offset) = _tilesetTilesId[gid];
+                        _spriteBatch.Draw(_tilesetTextures[tilesetId], destination, source, Color.White, (float)rotation, Vector2.Zero, effects, 0);                    
                 }
-
             }
         }
 
-        base.Draw(spriteBatch);
+        /*
+        // If mouse is over a collider, display its bounds
+        if (debugRect != null)
+        {
+            Texture2D _texture = new Texture2D(_game.GraphicsDevice, 1, 1);
+            _texture.SetData(new Color[] { Color.Green });
+
+            _spriteBatch.Draw(_texture, (Rectangle)debugRect, Color.White);
+        }
+        */
+
+        _spriteBatch.End();
+        
+        _game.GraphicsDevice.SetRenderTarget(null);
+        _spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: _camera.GetViewMatrix(), samplerState: SamplerState.PointClamp);
+        _spriteBatch.Draw(_renderTarget, new Vector2(0, 0), _renderTarget.Bounds, Color.White, 0, Vector2.Zero, Vector2.One, SpriteEffects.None, 1);
+        _spriteBatch.End();
+
+        // base.Draw(gameTime);
     }
 }
