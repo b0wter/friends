@@ -5,6 +5,7 @@ using System.Linq;
 using Friends.Game.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using MonoGame.Extended.Entities;
 using MonoGame.Extended.ViewportAdapters;
@@ -39,7 +40,7 @@ public class OverworldScene : GameplayScene
     private RenderTarget2D _renderTarget;
     private OrthographicCamera _camera;
 
-    private const int ScaleFactor = 3;
+    private const int ScaleFactor = 1;
 
     public OverworldScene(MyGame game) : base(game)
     {
@@ -55,6 +56,33 @@ public class OverworldScene : GameplayScene
         _transformMatrix = Matrix.CreateScale(ScaleFactor, ScaleFactor, 1f);
 
         base.Initialize();
+    }
+
+    public override void Update(GameTime gameTime)
+    {
+        base.Update(gameTime);
+        var movementDirection = Vector2.Zero;
+        var state = _game.CurKeyboardState;
+
+        if (state.IsKeyDown(Keys.Down))
+        {
+            movementDirection += Vector2.UnitY;
+        }
+        if (state.IsKeyDown(Keys.Up))
+        {
+            movementDirection -= Vector2.UnitY;
+        }
+        if (state.IsKeyDown(Keys.Left))
+        {
+            movementDirection -= Vector2.UnitX;
+        }
+        if (state.IsKeyDown(Keys.Right))
+        {
+            movementDirection += Vector2.UnitX;
+        }
+
+        const float cameraSpeed = 200;
+        _camera.Move(movementDirection * cameraSpeed * gameTime.GetElapsedSeconds());
     }
 
     public override void LoadContent()
@@ -136,8 +164,8 @@ public class OverworldScene : GameplayScene
                         var destination =
                             new Rectangle
                                 (
-                                    (int)(tileX * 0.75) - 1,
-                                    (x % 2 == 0 ? tileY : tileY + 38) - 11, //_tiledMap.TileHeight / 2) - 11,
+                                    (int)(tileX * 0.75),
+                                    (x % 2 == 0 ? y * 72 : y * 72 + 36) - 11,  // (x % 2 == 0 ? tileY : tileY + 38) - 11, //_tiledMap.TileHeight / 2) - 11,
                                     _tiledMap.TileWidth,
                                     _tiledMap.TileHeight
                                 );
@@ -201,7 +229,7 @@ public class OverworldScene : GameplayScene
         */
 
         _spriteBatch.End();
-        
+
         _game.GraphicsDevice.SetRenderTarget(null);
         _spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: _camera.GetViewMatrix(), samplerState: SamplerState.PointClamp);
         _spriteBatch.Draw(_renderTarget, new Vector2(0, 0), _renderTarget.Bounds, Color.White, 0, Vector2.Zero, Vector2.One, SpriteEffects.None, 1);
