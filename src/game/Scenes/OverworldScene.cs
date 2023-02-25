@@ -37,6 +37,7 @@ public class OverworldScene : GameplayScene
     private Dictionary<int, Texture2D> _tilesetTextures = new();
     private SpriteBatch _spriteBatch;
     private Dictionary<int, (int TilesetId, int Offset)> _tilesetTilesId;
+    private bool _wasTerrainRenderes;
     private RenderTarget2D _renderTarget;
     private OrthographicCamera _camera;
 
@@ -81,17 +82,23 @@ public class OverworldScene : GameplayScene
             movementDirection += Vector2.UnitX;
         }
 
-        const float cameraSpeed = 200;
+        if (state.IsKeyDown(Keys.OemPlus))
+        {
+            _camera.Zoom = Math.Clamp(_camera.Zoom + 0.3f * gameTime.GetElapsedSeconds(), _camera.MinimumZoom, _camera.MaximumZoom);
+        }
+
+        if (state.IsKeyDown(Keys.OemMinus))
+        {
+            _camera.Zoom = Math.Clamp(_camera.Zoom - 0.3f * gameTime.GetElapsedSeconds(), _camera.MinimumZoom, _camera.MaximumZoom);
+        }
+
+        const float cameraSpeed = 400;
         _camera.Move(movementDirection * cameraSpeed * gameTime.GetElapsedSeconds());
     }
 
     public override void LoadContent()
     {
-        void AddTilesetTexture(string name)
-        {
-            var id = _tiledMap.Tilesets.FirstOrDefault(t => t.source.EndsWith($"{name}.tsx")).firstgid;
-            _tilesetTextures.Add(id, _game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", name)));
-        }
+        base.LoadContent();
         
         _spriteBatch = new SpriteBatch(_game.GraphicsDevice);
         _tiledMap = new TiledMap(Path.Combine(_game.Content.RootDirectory, "tilemaps", "main.tmx"));
@@ -119,29 +126,33 @@ public class OverworldScene : GameplayScene
             var name = Path.GetFileNameWithoutExtension(tileset.source);
             _tilesetTextures.Add(tileset.firstgid, _game.Content.Load<Texture2D>(Path.Combine("tilesets", "zeshio", name)));
         }
-        
-        base.LoadContent();
     }
 
     public override void Draw(SpriteBatch spriteBatch)
     {
-        _game.GraphicsDevice.SetRenderTarget(_renderTarget);
-        
-        _game.GraphicsDevice.Clear(new Color(24, 24, 24));
-        _spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _transformMatrix);
+        base.Draw(spriteBatch);
 
-        var tileLayers = _tiledMap.Layers.Where(x => x.type == TiledLayerType.TileLayer);
-
-        foreach (var layer in tileLayers)
+        if (_wasTerrainRenderes == false)
         {
-            for (var y = 0; y < layer.height; y++)
+            _wasTerrainRenderes = true;
+            _game.GraphicsDevice.SetRenderTarget(_renderTarget);
+
+            _game.GraphicsDevice.Clear(new Color(24, 24, 24));
+            _spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _transformMatrix);
+
+            var tileLayers = _tiledMap.Layers.Where(x => x.type == TiledLayerType.TileLayer);
+
+            foreach (var layer in tileLayers)
             {
-                for (var x = 0; x < layer.width; x++)
+                for (var y = 0; y < layer.height; y++)
                 {
-                        var index = (y * layer.width) + x; // Assuming the default render order is used which is from right to bottom
+                    for (var x = 0; x < layer.width; x++)
+                    {
+                        var index = (y * layer.width) +
+                                    x; // Assuming the default render order is used which is from right to bottom
                         var gid = layer.data[index]; // The tileset tile index
-                        var tileX = x * _tiledMap.TileWidth;
-                        var tileY = y * _tiledMap.TileHeight;
+                        // var tileX = x * _tiledMap.TileWidth;
+                        // var tileY = y * _tiledMap.TileHeight;
 
                         // Gid 0 is used to tell there is no tile set
                         if (gid == 0)
@@ -163,12 +174,12 @@ public class OverworldScene : GameplayScene
                         var source = new Rectangle(rect.x, rect.y, rect.width, rect.height);
                         var destination =
                             new Rectangle
-                                (
-                                    (int)(tileX * 0.75),
-                                    (x % 2 == 0 ? y * 72 : y * 72 + 36) - 11,  // (x % 2 == 0 ? tileY : tileY + 38) - 11, //_tiledMap.TileHeight / 2) - 11,
-                                    _tiledMap.TileWidth,
-                                    _tiledMap.TileHeight
-                                );
+                            (
+                                (int)(x * _tiledMap.TileWidth * 0.75),
+                                (x % 2 == 0 ? y * 84 : y * 84 + 42) - 11,
+                                _tiledMap.TileWidth,
+                                96
+                            );
 
 
                         // You can use the helper methods to get information to handle flips and rotations
@@ -181,8 +192,12 @@ public class OverworldScene : GameplayScene
                         double rotation = 0f;
                         switch (tileTrans)
                         {
-                            case Trans.Flip_H: effects = SpriteEffects.FlipHorizontally; break;
-                            case Trans.Flip_V: effects = SpriteEffects.FlipVertically; break;
+                            case Trans.Flip_H:
+                                effects = SpriteEffects.FlipHorizontally;
+                                break;
+                            case Trans.Flip_V:
+                                effects = SpriteEffects.FlipVertically;
+                                break;
 
                             case Trans.Rotate_90:
                                 rotation = Math.PI * .5f;
@@ -212,29 +227,28 @@ public class OverworldScene : GameplayScene
 
                         // Render sprite at position tileX, tileY using the rect
                         var (tilesetId, offset) = _tilesetTilesId[gid];
-                        _spriteBatch.Draw(_tilesetTextures[tilesetId], destination, source, Color.White, (float)rotation, Vector2.Zero, effects, 0);                    
+                        _spriteBatch.Draw(_tilesetTextures[tilesetId], destination, source, Color.White,
+                            (float)rotation, Vector2.Zero, effects, 0);
+                    }
                 }
             }
+
+            /*
+            if (debugRect != null)
+            {
+                Texture2D _texture = new Texture2D(_game.GraphicsDevice, 1, 1);
+                _texture.SetData(new Color[] { Color.Green });
+    
+                _spriteBatch.Draw(_texture, (Rectangle)debugRect, Color.White);
+            }
+            */
+
+            _spriteBatch.End();
         }
-
-        /*
-        // If mouse is over a collider, display its bounds
-        if (debugRect != null)
-        {
-            Texture2D _texture = new Texture2D(_game.GraphicsDevice, 1, 1);
-            _texture.SetData(new Color[] { Color.Green });
-
-            _spriteBatch.Draw(_texture, (Rectangle)debugRect, Color.White);
-        }
-        */
-
-        _spriteBatch.End();
 
         _game.GraphicsDevice.SetRenderTarget(null);
         _spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: _camera.GetViewMatrix(), samplerState: SamplerState.PointClamp);
         _spriteBatch.Draw(_renderTarget, new Vector2(0, 0), _renderTarget.Bounds, Color.White, 0, Vector2.Zero, Vector2.One, SpriteEffects.None, 1);
         _spriteBatch.End();
-
-        // base.Draw(gameTime);
     }
 }
