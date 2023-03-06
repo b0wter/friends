@@ -27,6 +27,7 @@
     <PackageReference Include="MonoGame.Extended.Tiled" Version="3.8.0" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3-beta1" />
     <PackageReference Include="TiledCS" Version="3.3.3" />
   </ItemGroup>
   <ItemGroup>
@@ -897,6 +898,10 @@
     </Content>
     <None Remove="Content\tilesets\Walls.tsx" />
     <Content Include="Content\tilesets\Walls.tsx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Content\friends.tiled-project" />
+    <Content Include="Content\friends.tiled-project">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
