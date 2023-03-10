@@ -8,6 +8,8 @@ using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using MonoGame.Extended.ViewportAdapters;
 using TiledCS;
+using Color = Microsoft.Xna.Framework.Color;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Friends.Game.Scenes;
 
@@ -32,12 +34,14 @@ public abstract class HexmapScene : GameplayScene
     private const string TileDrawingHeightKey = "TileDrawingHeight";
     
     private TiledMap _tiledMap;
+    private readonly double Sqrt3 = Math.Sqrt(3);
+    private int TileSize;
     private Matrix _transformMatrix;
     private Dictionary<int, TiledTileset> _tilesets;
     private Dictionary<int, Texture2D> _tilesetTextures = new();
     private SpriteBatch _spriteBatch;
     private Dictionary<int, (int TilesetId, int Offset)> _tilesetTilesId;
-    private bool _wasTerrainRenderes;
+    private bool _wasTerrainRendered;
     private RenderTarget2D _renderTarget;
     private OrthographicCamera _camera;
     
@@ -102,6 +106,7 @@ public abstract class HexmapScene : GameplayScene
         
         _spriteBatch = new SpriteBatch(_game.GraphicsDevice);
         _tiledMap = new TiledMap(Path.Combine(_game.Content.RootDirectory, "tilemaps", TilemapFilename));
+        TileSize = _tiledMap.TileWidth / 2;
         _tilesets = _tiledMap.GetTiledTilesets(_game.Content.RootDirectory + "/Content/");
         var tilesetIds = _tiledMap.Tilesets.Select(t => t.firstgid).Order().ToList();
 
@@ -132,14 +137,18 @@ public abstract class HexmapScene : GameplayScene
         
         _renderTarget = new RenderTarget2D(_game.GraphicsDevice, pixelWidth, pixelHeight);
     }
+
+    protected (int TileX, int TileY) PixelCoordinatesToTileIds(int x, int y)
+        => (TileX: TileSize * 3 / 2 * y,
+            TileY: (int)Math.Round(TileSize * Sqrt3 * (y + 0.5 * (x&1)), 0));
     
     public override void Draw(SpriteBatch spriteBatch)
     {
         base.Draw(spriteBatch);
 
-        if (_wasTerrainRenderes == false)
+        if (_wasTerrainRendered == false)
         {
-            _wasTerrainRenderes = true;
+            _wasTerrainRendered = true;
             _game.GraphicsDevice.SetRenderTarget(_renderTarget);
 
             _game.GraphicsDevice.Clear(new Color(24, 24, 24));
