@@ -3,6 +3,10 @@ using System.Collections.Generic;
 
 namespace Friends.Game.Hexmaps;
 
+/// <summary>
+/// Position in hex coordinates with fractions for sub-hex-positioning.
+/// Uses cubic coordinates
+/// </summary>
 struct FractionalHex
 {
     public FractionalHex(double q, double r, double s)
@@ -50,8 +54,8 @@ struct FractionalHex
     static public List<Hex> HexLinedraw(Hex a, Hex b)
     {
         int N = a.Distance(b);
-        FractionalHex a_nudge = new FractionalHex(a.q + 1e-06, a.r + 1e-06, a.s - 2e-06);
-        FractionalHex b_nudge = new FractionalHex(b.q + 1e-06, b.r + 1e-06, b.s - 2e-06);
+        FractionalHex a_nudge = new FractionalHex(a.Q + 1e-06, a.R + 1e-06, a.S - 2e-06);
+        FractionalHex b_nudge = new FractionalHex(b.Q + 1e-06, b.R + 1e-06, b.S - 2e-06);
         List<Hex> results = new List<Hex>{};
         double step = 1.0 / Math.Max(N, 1);
         for (int i = 0; i <= N; i++)

@@ -3,72 +3,76 @@ using System.Collections.Generic;
 
 namespace Friends.Game.Hexmaps;
 
+/// <summary>
+/// Position in hex coordinates.
+/// Uses cubic coordinates
+/// </summary>
 struct Hex
 {
     public Hex(int q, int r, int s)
     {
-        this.q = q;
-        this.r = r;
-        this.s = s;
+        Q = q;
+        R = r;
+        S = s;
         if (q + r + s != 0) throw new ArgumentException("q + r + s must be 0");
     }
-    public readonly int q;
-    public readonly int r;
-    public readonly int s;
+    public readonly int Q;
+    public readonly int R;
+    public readonly int S;
 
     public Hex Add(Hex b)
     {
-        return new Hex(q + b.q, r + b.r, s + b.s);
+        return new Hex(Q + b.Q, R + b.R, S + b.S);
     }
 
 
     public Hex Subtract(Hex b)
     {
-        return new Hex(q - b.q, r - b.r, s - b.s);
+        return new Hex(Q - b.Q, R - b.R, S - b.S);
     }
 
 
     public Hex Scale(int k)
     {
-        return new Hex(q * k, r * k, s * k);
+        return new Hex(Q * k, R * k, S * k);
     }
 
 
     public Hex RotateLeft()
     {
-        return new Hex(-s, -q, -r);
+        return new Hex(-S, -Q, -R);
     }
 
 
     public Hex RotateRight()
     {
-        return new Hex(-r, -s, -q);
+        return new Hex(-R, -S, -Q);
     }
 
-    static public List<Hex> directions = new List<Hex>{new Hex(1, 0, -1), new Hex(1, -1, 0), new Hex(0, -1, 1), new Hex(-1, 0, 1), new Hex(-1, 1, 0), new Hex(0, 1, -1)};
+    static public List<Hex> directions = new() {new Hex(1, 0, -1), new Hex(1, -1, 0), new Hex(0, -1, 1), new Hex(-1, 0, 1), new Hex(-1, 1, 0), new Hex(0, 1, -1)};
 
     static public Hex Direction(int direction)
     {
-        return Hex.directions[direction];
+        return directions[direction];
     }
 
 
     public Hex Neighbor(int direction)
     {
-        return Add(Hex.Direction(direction));
+        return Add(Direction(direction));
     }
 
-    static public List<Hex> diagonals = new List<Hex>{new Hex(2, -1, -1), new Hex(1, -2, 1), new Hex(-1, -1, 2), new Hex(-2, 1, 1), new Hex(-1, 2, -1), new Hex(1, 1, -2)};
+    static public List<Hex> diagonals = new() {new Hex(2, -1, -1), new Hex(1, -2, 1), new Hex(-1, -1, 2), new Hex(-2, 1, 1), new Hex(-1, 2, -1), new Hex(1, 1, -2)};
 
     public Hex DiagonalNeighbor(int direction)
     {
-        return Add(Hex.diagonals[direction]);
+        return Add(diagonals[direction]);
     }
 
 
     public int Length()
     {
-        return (int)((Math.Abs(q) + Math.Abs(r) + Math.Abs(s)) / 2);
+        return (Math.Abs(Q) + Math.Abs(R) + Math.Abs(S)) / 2;
     }
 
 

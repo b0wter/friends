@@ -1,5 +1,9 @@
 namespace Friends.Game.Hexmaps;
 
+/// <summary>
+/// Position in hex coordinates.
+/// Uses doubled coordinates
+/// </summary>
 struct DoubledCoord
 {
     public DoubledCoord(int col, int row)
@@ -12,8 +16,8 @@ struct DoubledCoord
 
     static public DoubledCoord QdoubledFromCube(Hex h)
     {
-        int col = h.q;
-        int row = 2 * h.r + h.q;
+        int col = h.Q;
+        int row = 2 * h.R + h.Q;
         return new DoubledCoord(col, row);
     }
 
@@ -29,8 +33,8 @@ struct DoubledCoord
 
     static public DoubledCoord RdoubledFromCube(Hex h)
     {
-        int col = 2 * h.q + h.r;
-        int row = h.r;
+        int col = 2 * h.Q + h.R;
+        int row = h.R;
         return new DoubledCoord(col, row);
     }
 
